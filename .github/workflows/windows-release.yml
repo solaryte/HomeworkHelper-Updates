@@ -34,6 +34,11 @@ jobs:
             if (!(Test-Path (Join-Path app $f))) { throw "Source archive missing $f at its root" }
           }
           if (!(Test-Path 'app/assets/homework_helper.ico')) { throw 'Missing icon' }
+          $gui = 'app/HomeworkHelper.py'
+          $source = Get-Content -LiteralPath $gui -Raw
+          if ($source -notmatch 'APP_VERSION="\\d+\\.\\d+"') { throw 'Cannot locate app version in HomeworkHelper.py' }
+          $source = $source -replace 'APP_VERSION="\\d+\\.\\d+"', ('APP_VERSION="' + $env:VERSION + '"')
+          Set-Content -LiteralPath $gui -Value $source -Encoding utf8
 
       - uses: actions/setup-python@v5
         with:
