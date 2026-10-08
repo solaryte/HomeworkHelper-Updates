@@ -1,0 +1,96 @@
+name: Build and publish Windows update
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 25.38 (must be newer than installed version)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: homeworkhelper-release
+  cancel-in-progress: false
+
+jobs:
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate version and source archive
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ($env:VERSION -notmatch '^\d+\.\d+$') { throw 'Version must look like 25.38' }
+          if (!(Test-Path 'HomeworkHelper-source.zip')) { throw 'Upload HomeworkHelper-source.zip to repository root first.' }
+          New-Item -ItemType Directory -Path app -Force | Out-Null
+          Expand-Archive -LiteralPath HomeworkHelper-source.zip -DestinationPath app -Force
+          foreach ($f in @('HomeworkHelper.py','sparx_engine.py')) {
+            if (!(Test-Path (Join-Path app $f))) { throw "Source archive missing $f at its root" }
+          }
+          if (!(Test-Path 'app/assets/homework_helper.ico')) { throw 'Missing icon' }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+          cache-dependency-path: ''
+        continue-on-error: false
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip pyinstaller playwright
+          python -m playwright install chromium
+
+      - name: Build Windows executables
+        working-directory: app
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --console --name "Homework Helper Engine" --collect-all playwright --hidden-import playwright.sync_api --hidden-import playwright._impl._driver sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Engine build failed' }
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Homework Helper" --icon "assets/homework_helper.ico" --add-data "assets;assets" HomeworkHelper.py
+          if ($LASTEXITCODE -ne 0) { throw 'GUI build failed' }
+
+      - name: Package update and verify hashes
+        working-directory: app
+        shell: pwsh
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          $files=@('Homework Helper.exe','Homework Helper Engine.exe')
+          $hashes=@{}
+          foreach($f in $files) {
+            $p=Join-Path dist $f
+            if(!(Test-Path $p)){throw "Missing $f"}
+            $hashes[$f]=(Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash
+          }
+          @{product='HomeworkHelper';version=$env:VERSION;sha256=$hashes} | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath dist/update_manifest.json -Encoding utf8
+          Compress-Archive -LiteralPath @('dist/Homework Helper.exe','dist/Homework Helper Engine.exe','dist/update_manifest.json') -DestinationPath Update.zip -Force
+          Expand-Archive -LiteralPath Update.zip -DestinationPath verify
+          foreach($f in $files) {
+            if ((Get-FileHash -LiteralPath (Join-Path verify $f) -Algorithm SHA256).Hash -ne $hashes[$f]) { throw "Verification failed: $f" }
+          }
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Update
+          path: app/Update.zip
+
+      - name: Publish GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          $tag="v$env:VERSION"
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -eq 0) { throw "Release $tag already exists; refusing to overwrite it" }
+          gh release create $tag app/Update.zip --repo $env:GITHUB_REPOSITORY --title "Homework Helper $tag" --notes "Windows update package for the installed Homework Helper app."
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed' }
