@@ -42,7 +42,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.13'
         continue-on-error: false
 
       - name: Install build dependencies
@@ -59,6 +59,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Engine build failed' }
           python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Homework Helper" --icon "assets/homework_helper.ico" --add-data "assets;assets" HomeworkHelper.py
           if ($LASTEXITCODE -ne 0) { throw 'GUI build failed' }
+
+      - name: Smoke-test bundled Python runtime
+        working-directory: app
+        shell: pwsh
+        run: |
+          $exe = Join-Path (Resolve-Path 'dist').Path 'Homework Helper.exe'
+          $proc = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 12
+          $proc.Refresh()
+          if ($proc.HasExited) {
+            if ($proc.ExitCode -ne 0) { throw "GUI exited with code $($proc.ExitCode); refusing to publish." }
+            Write-Warning 'GUI exited normally; interactive behavior still needs testing.'
+          } else {
+            Stop-Process -Id $proc.Id -Force
+            Write-Host 'GUI remained running after startup smoke test.'
+          }
 
       - name: Package update and verify hashes
         working-directory: app
