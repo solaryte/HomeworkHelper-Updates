@@ -84,6 +84,14 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Equation engine syntax check failed' }
 
+      - name: Apply stale-question cancellation
+        shell: pwsh
+        run: |
+          python build/patch_stale_question_cancel.py
+          if ($LASTEXITCODE -ne 0) { throw 'Stale-question patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Patched engine failed syntax check' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
