@@ -92,6 +92,14 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Patched engine failed syntax check' }
 
+      - name: Apply choice fast path
+        shell: pwsh
+        run: |
+          python build/patch_choice_fast_path.py
+          if ($LASTEXITCODE -ne 0) { throw 'Choice fast path patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Choice fast path syntax check failed' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
