@@ -54,6 +54,12 @@ jobs:
           }
           Set-Content -LiteralPath $path -Value $source -Encoding utf8
 
+      - name: Apply Smart Speed patch
+        shell: pwsh
+        run: |
+          python build/patch_smart_speed.py
+          if ($LASTEXITCODE -ne 0) { throw 'Smart Speed patch failed; release blocked' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
