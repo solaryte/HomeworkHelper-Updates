@@ -27,9 +27,9 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           if ($env:VERSION -notmatch '^\d+\.\d+$') { throw 'Version must look like 25.38' }
-          if (!(Test-Path 'HomeworkHelper-source.zip')) { throw 'Upload HomeworkHelper-source.zip to repository root first.' }
+          if (!(Test-Path 'HomeworkHelper-source.zip.zip')) { throw 'Upload HomeworkHelper-source.zip.zip to repository root first.' }
           New-Item -ItemType Directory -Path app -Force | Out-Null
-          Expand-Archive -LiteralPath HomeworkHelper-source.zip -DestinationPath app -Force
+          Expand-Archive -LiteralPath HomeworkHelper-source.zip.zip -DestinationPath app -Force
           foreach ($f in @('HomeworkHelper.py','sparx_engine.py')) {
             if (!(Test-Path (Join-Path app $f))) { throw "Source archive missing $f at its root" }
           }
