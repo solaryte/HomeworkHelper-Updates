@@ -68,6 +68,14 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Patched engine failed Python syntax validation' }
 
+      - name: Apply adaptive thinking routing
+        shell: pwsh
+        run: |
+          python build/patch_adaptive_thinking.py
+          if ($LASTEXITCODE -ne 0) { throw 'Adaptive thinking patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Adaptive engine syntax check failed' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
