@@ -100,6 +100,15 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Choice fast path syntax check failed' }
 
+      - name: Apply v26 dashboard design
+        if: startsWith(inputs.version, '26.')
+        shell: pwsh
+        run: |
+          python build/patch_v26_dashboard.py
+          if ($LASTEXITCODE -ne 0) { throw 'v26 dashboard patch failed' }
+          python -m py_compile app/HomeworkHelper.py
+          if ($LASTEXITCODE -ne 0) { throw 'v26 GUI syntax check failed' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
