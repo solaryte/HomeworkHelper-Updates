@@ -25,13 +25,14 @@ new="""const base=[...document.querySelectorAll('button,[role="button"],label,[r
       const els=[...new Set([...base,...extra])];"""
 assert s.count(old)==1, "choice selector hook missing"
 s=s.replace(old,new)
-# Avoid whitespace-joined math option collisions by including MathML annotation where available.
-old="let t=(e.innerText||e.textContent||e.getAttribute('aria-label')||'').replace(/\\s+/g,' ').trim();"
-new="""let t=(e.innerText||e.textContent||e.getAttribute('aria-label')||'').replace(/\\s+/g,' ').trim();
-        const tex=e.querySelector('annotation[encoding="application/x-tex"]');
-        if(tex && tex.textContent.trim()) t=tex.textContent.trim();"""
-assert s.count(old)==1, "choice label hook missing"
-s=s.replace(old,new)
+# Extract TeX after the original visible label is computed, without assuming
+# its exact whitespace-escaping representation in the source.
+hook="        if(!t||t.length>260||bad.test(t)) continue;"
+insertion="""        const tex=e.querySelector('annotation[encoding="application/x-tex"]');
+        if(tex && tex.textContent.trim()) t=tex.textContent.trim();
+"""
+assert s.count(hook)==1, "choice label filter hook missing"
+s=s.replace(hook,insertion+hook)
 s=re.sub(r'Homework Helper Engine v25\\.\\d+', 'Homework Helper Engine v25.44', s)
 p.write_text(s,encoding="utf-8")
 print("Equation choice discovery patch installed")
