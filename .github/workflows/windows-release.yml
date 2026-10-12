@@ -40,6 +40,20 @@ jobs:
           $source = $source -replace 'APP_VERSION="\d+\.\d+"', ('APP_VERSION="' + $env:VERSION + '"')
           Set-Content -LiteralPath $gui -Value $source -Encoding utf8
 
+      - name: Apply Smart AI default
+        shell: pwsh
+        run: |
+          $path = 'app/sparx_engine.py'
+          $source = Get-Content -LiteralPath $path -Raw
+          $old = 'os.environ.get("HOMEWORK_HELPER_LOCAL_MODEL","qwen2.5vl:7b")'
+          $new = 'os.environ.get("HOMEWORK_HELPER_LOCAL_MODEL","qwen3-vl:8b")'
+          if ($source.Contains($old)) {
+            $source = $source.Replace($old, $new)
+          } elseif (-not $source.Contains($new)) {
+            throw 'Could not locate expected local model setting; refusing to publish.'
+          }
+          Set-Content -LiteralPath $path -Value $source -Encoding utf8
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
