@@ -60,6 +60,14 @@ jobs:
           python build/patch_smart_speed.py
           if ($LASTEXITCODE -ne 0) { throw 'Smart Speed patch failed; release blocked' }
 
+      - name: Apply question sync guard
+        shell: pwsh
+        run: |
+          python build/patch_question_sync.py
+          if ($LASTEXITCODE -ne 0) { throw 'Question sync patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Patched engine failed Python syntax validation' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
