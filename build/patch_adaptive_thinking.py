@@ -35,6 +35,6 @@ new='''    fp=qfingerprint(page)
     visual_primary=vision_first_plan(page,controls,shot,wrong)'''
 assert s.count(old)==1, "vision entry changed"
 s=s.replace(old,new)
-s=re.sub(r'Homework Helper Engine v25\\.\\d+', 'Homework Helper Engine v25.43', s)
+s=re.sub(r'Homework Helper Engine v25\.\d+', 'Homework Helper Engine v25.43', s)
 p.write_text(s,encoding="utf-8")
 print("Adaptive fast-first/deep-on-rejection routing installed")
