@@ -100,6 +100,15 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Choice fast path syntax check failed' }
 
+      - name: Apply strict equation choice safety
+        if: startsWith(inputs.version, '26.')
+        shell: pwsh
+        run: |
+          python build/patch_v26_equation_safety.py
+          if ($LASTEXITCODE -ne 0) { throw 'Equation safety patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Equation safety syntax check failed' }
+
       - name: Apply v26 dashboard design
         if: startsWith(inputs.version, '26.')
         shell: pwsh
