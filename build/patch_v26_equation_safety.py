@@ -24,6 +24,12 @@ def _hh_is_equation(value):
     return ("=" in x or r"\frac" in x or r"\times" in x
             or "R_" in x or "R{" in x)
 
+def _hh_text_normalise(value):
+    import re, unicodedata
+    x=unicodedata.normalize("NFKC",str(value or ""))
+    x=x.replace(chr(8217),"'").replace(chr(8216),"'")
+    return re.sub(r"\s+"," ",x).strip().casefold()
+
 def match_option(answer, options):
     # Equation cards must match uniquely and exactly after harmless formatting
     # normalisation. Never use approximate text matching for mathematics.
@@ -34,7 +40,12 @@ def match_option(answer, options):
             print("EQUATION SAFETY: no unique exact equation match; stopping this attempt.",flush=True)
             raise ValueError("Unsafe equation choice mapping: no unique exact match")
         return matches[0]
-    return _hh_legacy_match_option(answer,options)
+    target=_hh_text_normalise(answer)
+    matches=[o for o in options if _hh_text_normalise(o)==target]
+    if len(matches)!=1:
+        print("CHOICE SAFETY: answer does not uniquely match displayed choices.",flush=True)
+        raise ValueError("Unsafe text choice mapping")
+    return matches[0]
 
 '''
 s=s.replace("def _hh_legacy_match_option(",strict+"def _hh_legacy_match_option(",1)
