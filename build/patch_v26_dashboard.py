@@ -34,13 +34,5 @@ s=s.replace('  self.actionrow.configure(bg=c["panel"]);self.welcome.configure','
 s=s.replace('  self.logo.configure(bg=c["side"],fg=c["text"],font=(f,17,"bold"))','  self.logo.configure(bg=c["side"],fg=c["text"],font=(f,12,"bold"))')
 s=s.replace('for k,b in self.nav.items():b.configure(bg=c["accent"] if k==self.page else c["panel2"] if k==self._hover_nav else c["side"],fg="#10242b" if k==self.page else c["text"],font=(f,s,"bold"))','for k,b in self.nav.items():b.configure(bg=c["panel2"] if k==self.page else c["panel"] if k==self._hover_nav else c["side"],fg=c["accent"] if k==self.page else c["muted"],font=(f,s,"bold" if k==self.page else "normal"))')
 s=s.replace('self.login.configure(bg=c["accent2"],fg="white",font=(f,s,"bold"))','self.login.configure(bg=c["panel2"],fg=c["text"],font=(f,s,"bold"))')
-s=s.replace('THEMES={','''THEMES={
- "V26":{"Dark":{"bg":"#101019","side":"#15151f","panel":"#1b1a28","panel2":"#2b2541","log":"#0c0c14","accent":"#ad91fa","accent2":"#342d4c"},
-        "Light":{"bg":"#f6f5fb","side":"#eeecf6","panel":"#ffffff","panel2":"#e8e1f7","log":"#ffffff","accent":"#8159cf","accent2":"#d7c8ee"}},
-''',1)
-s=s.replace('DEFAULT={"palette":"Teal"','DEFAULT={"palette":"V26"')
-s=s.replace('super().__init__(); self.cfg=self.load_settings()','''super().__init__(); self.cfg=self.load_settings()
-  if not self.cfg.get("v26_design_migrated"):
-   self.cfg["palette"]="V26";self.cfg["mode"]="Dark";self.cfg["v26_design_migrated"]=True''')
 p.write_text(s,encoding="utf-8")
 print("v26 modern dashboard applied")
