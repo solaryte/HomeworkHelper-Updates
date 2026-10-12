@@ -9,10 +9,10 @@ s=p.read_text(encoding="utf-8-sig")
 # card from being clicked when the page has changed during slow inference.
 needle='    visual_primary=vision_first_plan(page,controls,shot,wrong)\n'
 replacement='''    # Snapshot question identity before vision inference. The URL alone is not enough.
-    _hh_solve_identity=(page.url or "", qfingerprint(page))
+    _hh_solve_identity=(page.url or "", qtext.strip())
     def _hh_still_same_question():
         try:
-            return (page.url or "", qfingerprint(page)) == _hh_solve_identity
+            return (page.url or "", active_question_text(page)[:15000].strip()) == _hh_solve_identity
         except Exception:
             return False
     visual_primary=vision_first_plan(page,controls,shot,wrong)
