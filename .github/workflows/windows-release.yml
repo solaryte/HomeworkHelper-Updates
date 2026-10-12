@@ -76,6 +76,14 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'Adaptive engine syntax check failed' }
 
+      - name: Apply equation choice recognition
+        shell: pwsh
+        run: |
+          python build/patch_equation_choices.py
+          if ($LASTEXITCODE -ne 0) { throw 'Equation choices patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Equation engine syntax check failed' }
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
