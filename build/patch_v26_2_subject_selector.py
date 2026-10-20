@@ -66,6 +66,20 @@ s=s.replace(needle,'''                if state["switch"]:
                     print("Maths browser is available; automatic solving is disabled until Maths controls are tested.",flush=True)
                 if state["login"]:
                     state["login"]=False''',1)
+# Keep Maths isolated from every Science-specific navigation and recovery handler.
+# The mode may open its site, but cannot touch a Maths question with Science logic.
+needle='                # Utility overlays/dialogs are never solver states. Close them before any solver action.'
+assert s.count(needle)==1, "main loop guard changed"
+s=s.replace(needle,'''                if state["subject"]=="maths":
+                    # Maths question controls require a separate, tested adapter.
+                    # Never run Science overlays, correction flows, or navigation.
+                    if state["run"]:
+                        state["run"]=False
+                        print("STATUS|MATHS_SOLVER_PENDING",flush=True)
+                    time.sleep(.25)
+                    continue
+
+'''+needle,1)
 needle='                        candidates=[x for x in ctx.pages if "sparx-learning.com" in (x.url or "")]'
 assert s.count(needle)==1, "login candidate hook changed"
 s=s.replace(needle,'''                        domain="maths.sparx-learning.com" if state["subject"]=="maths" else "science.sparx-learning.com"
