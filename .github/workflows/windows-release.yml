@@ -118,6 +118,15 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'v26.2 engine syntax check failed' }
 
+      - name: Apply v26.2 navigation guard
+        if: startsWith(inputs.version, '26.2')
+        shell: pwsh
+        run: |
+          python build/patch_v26_2_navigation.py
+          if ($LASTEXITCODE -ne 0) { throw 'v26.2 navigation patch failed; release blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'v26.2 navigation syntax check failed' }
+
       - name: Apply v26 dashboard design
         if: startsWith(inputs.version, '26.')
         shell: pwsh
