@@ -15,7 +15,7 @@ new='''    page.mouse.click(b["x"]+b["w"]/2,b["y"]+b["h"]/2);time.sleep(.2)
                     t=el.inner_text(timeout=400).strip()
                     if t and len(t)<100: vals.append(t)
         except Exception: pass
-    if not vals:'''
+'''
 assert s.count(old)==1,"popup hook changed"
 s=s.replace(old,new,1)
 old='''        page.mouse.click(b["x"]+b["w"]/2,b["y"]+b["h"]/2);time.sleep(.1)
