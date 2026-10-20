@@ -7,6 +7,11 @@ on:
         description: 'Version, e.g. 25.38 (must be newer than installed version)'
         required: true
         type: string
+      publish:
+        description: 'Publish as an in-app update (only after testing)'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -127,6 +132,15 @@ jobs:
           python -m py_compile app/sparx_engine.py
           if ($LASTEXITCODE -ne 0) { throw 'v26.2 navigation syntax check failed' }
 
+      - name: Apply v26.2 dropdown reliability
+        if: startsWith(inputs.version, '26.2')
+        shell: pwsh
+        run: |
+          python build/patch_v26_2_dropdown_reliability.py
+          if ($LASTEXITCODE -ne 0) { throw 'Dropdown patch failed; build blocked' }
+          python -m py_compile app/sparx_engine.py
+          if ($LASTEXITCODE -ne 0) { throw 'Dropdown patch syntax check failed' }
+
       - name: Apply v26 dashboard design
         if: startsWith(inputs.version, '26.')
         shell: pwsh
@@ -208,6 +222,7 @@ jobs:
           path: app/Update.zip
 
       - name: Publish GitHub release
+        if: inputs.publish == true
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
